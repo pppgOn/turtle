@@ -16,15 +16,16 @@ void yyerror(struct ast *ret, const char *);
 %parse-param { struct ast *ret }
 
 %union {
-	double value;
-	char *name;
-	struct ast_node *node;
+  double value;
+  char *name;
+  struct ast_node *node;
 }
 
-%token <value>		VALUE			 "value"
-%token <name>		 NAME				"name"
+%token <value>    VALUE       "value"
+%token <name>     NAME        "name"
 
-%token						KW_FORWARD	"forward"
+%token            KW_FORWARD  "forward"
+%token            KW_COLOR    "color"
 /* TODO: add other tokens */
 
 %type <node> unit cmds cmd expr
@@ -32,26 +33,26 @@ void yyerror(struct ast *ret, const char *);
 %%
 
 unit:
-		cmds							{ $$ = $1; ret->unit = $$; }
+    cmds              { $$ = $1; ret->unit = $$; }
 ;
 
 cmds:
-		cmd cmds					{ $1->next = $2; $$ = $1; }
-	| /* empty */			 { $$ = NULL; }
+    cmd cmds          { $1->next = $2; $$ = $1; }
+  | /* empty */       { $$ = NULL; }
 ;
 
 cmd:
-		KW_FORWARD expr	 { /* TODO */ }
+    KW_FORWARD expr   { $$  }
 ;
 
 expr:
-		VALUE						 { $$ = make_expr_value($1); }
-		/* TODO: add identifier */
+    VALUE             { $$ = make_expr_value($1); }
+    /* TODO: add identifier */
 ;
 
 %%
 
 void yyerror(struct ast *ret, const char *msg) {
-	(void) ret;
-	fprintf(stderr, "%s\n", msg);
+  (void) ret;
+  fprintf(stderr, "%s\n", msg);
 }
