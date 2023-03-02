@@ -31,9 +31,9 @@ struct ast_node *make_cmd_color(struct ast_node *exprRed, struct ast_node *exprG
   node->kind = KIND_CMD_SIMPLE;
   node->u.cmd = CMD_COLOR;
   node->children_count = 3;
-  node->children[0] = expr;
-  node->children[1] = expr;
-  node->children[2] = expr;
+  node->children[0] = exprRed;
+  node->children[1] = exprGreen;
+  node->children[2] = exprBlue;
   return node;
 }
 
@@ -43,7 +43,7 @@ struct ast_node *make_cmd_right(struct ast_node *expr) {
   node->u.cmd = CMD_RIGHT;
   node->children_count = 1;
   node->children[0] = expr;
-  return node;t
+  return node;
 }
 
 void ast_destroy(struct ast *self) {
@@ -71,5 +71,5 @@ void ast_eval(const struct ast *self, struct context *ctx) {
  */
 
 void ast_print(const struct ast *self) {
-
+	
 }
