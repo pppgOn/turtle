@@ -11,14 +11,21 @@
 
 DIGIT [0-9]
 FORWARD         fw|forward
+BACKWARD        bw|backward
 RIGHT           rt|right
+LEFT            lt|left
+HEADING         hd|heading
+POSITION        pos|posiition
+
 
 
 %%
 "#".*          /*do nothing*/
 
-
-"color red"        { return COL_RED;}
+"up"                {return KW_UP; }
+"down"              {return KW_DOWN; }
+"home"              {return KW_HOME; }
+"color red"         { return COL_RED;}
 "color green"       { return COL_GREEN;}
 "color blue"        { return COL_BLUE;}
 "color cyan"        { return COL_CYAN;}
@@ -36,7 +43,11 @@ RIGHT           rt|right
 "/"           { return '/'; }
 
 {FORWARD}             {return KW_FORWARD; }
+{BACKWARD}            {return KW_BACKWARD; }
 {RIGHT}               {return KW_RIGHT; }
+{LEFT}                {return KW_LEFT; }
+{HEADING}             {return KW_HEAD; }
+{POSITION}            {return KW_POS; }
 {DIGIT}+              { yylval.value = strtod(yytext, NULL); return VALUE; }
 [\n\t ]*              /* whitespace */
 .                     { fprintf(stderr, "Unknown token: '%s'\n", yytext); exit(EXIT_FAILURE); }

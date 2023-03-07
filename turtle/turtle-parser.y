@@ -25,7 +25,16 @@ void yyerror(struct ast *ret, const char *);
 %token <name>     NAME        "name"
 
 %token            KW_FORWARD  "forward"
+%token            KW_BACKWARD "backward"
 %token            KW_RIGHT    "right"
+%token            KW_LEFT     "left"
+%token            KW_HOME     "home"
+%token            KW_POS      "position"
+%token            KW_HEAD     "heading"
+%token            KW_UP       "up"
+%token            KW_DOWN     "down"
+
+
 
 /*%token*/
 
@@ -62,6 +71,8 @@ cmds:
 cmd:
     KW_FORWARD expr   { $$= make_cmd_forward($2);  }
    |KW_RIGHT expr     { $$ = make_cmd_right($2); }
+   /*|KW_LEFT expr      { $$ = make_cmd_left($2); }
+   |KW_BACKWARD expr  { $$ = make_cmd_backward($2);}*/
    |KW_COLOR expr expr expr { $$= make_cmd_color($2, $3, $4); }
    |COL_RED           { $$ = make_cmd_color_value(1.0, 0.0, 0.0); }
    |COL_GREEN         { $$ = make_cmd_color_value(0.0, 1.0, 0.0); }
