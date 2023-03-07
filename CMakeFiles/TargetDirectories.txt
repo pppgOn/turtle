@@ -1,0 +1,3 @@
+/home/pppg/Bureau/fac/S6/turtle/CMakeFiles/turtle-viewer.dir
+/home/pppg/Bureau/fac/S6/turtle/CMakeFiles/edit_cache.dir
+/home/pppg/Bureau/fac/S6/turtle/CMakeFiles/rebuild_cache.dir
