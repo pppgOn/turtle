@@ -57,9 +57,9 @@ cmd:
 
 expr:
     VALUE             { $$ = make_expr_value($1); }
-   |COL_RED           { $$ = make_cmd_color_value(1.0 0.0 0.0); }
-   |COL_GREEN         { $$ = make_cmd_color_value(0.0 1.0 0.0); }
-   |COL_BLUE          { $$ = make_cmd_color_value(0.0 0.0 1.0); }
+   |COL_RED           { $$ = make_cmd_color_value(1.0, 0.0, 0.0); }
+   |COL_GREEN         { $$ = make_cmd_color_value(0.0, 1.0, 0.0); }
+   |COL_BLUE          { $$ = make_cmd_color_value(0.0, 0.0, 1.0); }
    |COL_CYAN          { $$ = make_cmd_color_value(0.0 , 1.0, 1.0); }
    |COL_MAGENTA       { $$ = make_cmd_color_value(1.0, 0.0, 1.0); }
    |COL_YELLOW        { $$ = make_cmd_color_value(1.0, 1.0, 0.0); }
