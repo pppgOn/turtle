@@ -10,21 +10,24 @@
 %option warn 8bit nodefault noyywrap
 
 DIGIT [0-9]
+FORWARD         fw|forward
+RIGHT           rt|right
 
 
 %%
 "#".*          /*do nothing*/
 
-"color"       { return KW_COLOR; }
-"red"         { return COL_RED;}
-"green"       { return COL_GREEN;}
-"blue"        { return COL_BLUE;}
-"cyan"        { return COL_CYAN;}
-"magenta"     { return COL_MAGENTA;}
-"yellow"      { return COL_YELLOW;}
-"black"       { return COL_BLACK;}
-"gray"        { return COL_GRAY;}
-"white"       { return COL_WHITE;}
+
+"color red"        { return COL_RED;}
+"color green"       { return COL_GREEN;}
+"color blue"        { return COL_BLUE;}
+"color cyan"        { return COL_CYAN;}
+"color magenta"     { return COL_MAGENTA;}
+"color yellow"      { return COL_YELLOW;}
+"color black"       { return COL_BLACK;}
+"color gray"        { return COL_GRAY;}
+"color white"       { return COL_WHITE;}
+"color"             { return KW_COLOR; }
 
 "^"           { return '^'; }
 "+"           { return '+'; }
@@ -32,15 +35,8 @@ DIGIT [0-9]
 "*"           { return '*'; }
 "/"           { return '/'; }
 
-"sin"
-"cos"
-"tan"
-"sqrt"
-"random"
-
-"forward"       { return KW_FORWARD; }
-
-
+{FORWARD}             {return KW_FORWARD; }
+{RIGHT}               {return KW_RIGHT; }
 {DIGIT}+              { yylval.value = strtod(yytext, NULL); return VALUE; }
 [\n\t ]*              /* whitespace */
 .                     { fprintf(stderr, "Unknown token: '%s'\n", yytext); exit(EXIT_FAILURE); }

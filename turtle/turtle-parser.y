@@ -25,6 +25,9 @@ void yyerror(struct ast *ret, const char *);
 %token <name>     NAME        "name"
 
 %token            KW_FORWARD  "forward"
+%token            KW_RIGHT    "right"
+
+/*%token*/
 
 %token            KW_COLOR    "color"
 %token            COL_RED     "red"
@@ -36,6 +39,11 @@ void yyerror(struct ast *ret, const char *);
 %token            COL_BLACK   "black"
 %token            COL_GRAY    "gray"
 %token            COL_WHITE   "white"
+
+%left '+' '-'
+%left '*' '/'
+%left '^'
+%left UMINUS
 /* TODO: add other tokens */
 
 %type <node> unit cmds cmd expr
@@ -52,20 +60,29 @@ cmds:
 ;
 
 cmd:
-    KW_FORWARD expr   {  }
-;
-
-expr:
-    VALUE             { $$ = make_expr_value($1); }
+    KW_FORWARD expr   { $$= make_cmd_forward($2);  }
+   |KW_RIGHT expr     { $$ = make_cmd_right($2); }
+   |KW_COLOR expr expr expr { $$= make_cmd_color($2, $3, $4); }
    |COL_RED           { $$ = make_cmd_color_value(1.0, 0.0, 0.0); }
    |COL_GREEN         { $$ = make_cmd_color_value(0.0, 1.0, 0.0); }
    |COL_BLUE          { $$ = make_cmd_color_value(0.0, 0.0, 1.0); }
-   |COL_CYAN          { $$ = make_cmd_color_value(0.0 , 1.0, 1.0); }
+   |COL_CYAN          { $$ = make_cmd_color_value(0.0, 1.0, 1.0); }
    |COL_MAGENTA       { $$ = make_cmd_color_value(1.0, 0.0, 1.0); }
    |COL_YELLOW        { $$ = make_cmd_color_value(1.0, 1.0, 0.0); }
    |COL_BLACK         { $$ = make_cmd_color_value(0.0, 0.0, 0.0); }
    |COL_GRAY          { $$ = make_cmd_color_value(0.5, 0.5, 0.5); }
    |COL_WHITE         { $$ = make_cmd_color_value(1.0, 1.0, 1.0); }
+;
+
+expr:
+    VALUE             { $$ = make_expr_value($1); }
+   /*| '(' expr ')'      { $$ = make_expr_value($2); }
+   | expr '+' expr     { $$ = make_expr_value($1 + $3); }
+   | expr '-' expr     { $$ = make_expr_value($1 - $3); }
+   | expr '*' expr     { $$ = make_expr_value($1 * $3); }
+   | expr '/' expr     { $$ = make_expr_value($1 / $3); }
+   | expr '^' expr     { $$ = make_expr_value($1 ^ $3); }
+   | '-' expr %prec UMINUS         { $$ = make_expr_value(-$2); }*/
     /* TODO: add identifier */
 ;
 
