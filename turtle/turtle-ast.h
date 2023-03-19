@@ -68,15 +68,50 @@ struct ast_node {
 // TODO: make some constructors to use in parser.y
 // for example:
 struct ast_node *make_expr_value(double value);
+struct ast_node *make_expr_value_exp(double value1, double value2);
 struct ast_node *make_cmd_color(struct ast_node *exprRed, struct ast_node *exprGreen, struct ast_node *exprBlue);
 struct ast_node *make_cmd_color_value(double valueRed, double valueGreen, double valueBlue);
 struct ast_node *make_cmd_forward(struct ast_node *expr);
 struct ast_node *make_cmd_right(struct ast_node *expr);
+struct ast_node *make_cmd_backward(struct ast_node *expr);
+struct ast_node *make_cmd_left(struct ast_node *expr);
+struct ast_node *make_cmd_heading(struct ast_node *expr);
+struct ast_node *make_cmd_print(struct ast_node *toPrint);
+struct ast_node *make_cmd_position(struct ast_node *exprX, struct ast_node *exprY);
+struct ast_node *make_cmd_home();
+struct ast_node *make_cmd_up();
+struct ast_node *make_cmd_down();
 
+struct ast_node *make_cmd_set(char *name, struct ast_node *expr);
+struct ast_node *make_expr_name(char *name);
+struct ast_node *make_cmd_proc(char *name, struct ast_node *cmd);
+struct ast_node *make_cmd_call(char *name);
 
+struct ast_node *make_fcn_sin(struct ast_node *expr);
+struct ast_node *make_fcn_cos(struct ast_node *expr);
+struct ast_node *make_fcn_tan(struct ast_node *expr);
+struct ast_node *make_fcn_sqrt(struct ast_node *expr);
+struct ast_node *make_fcn_random(struct ast_node *expr0, struct ast_node *expr1);
+
+struct ast_node *make_expr_binop(struct ast_node *expr0, struct ast_node *expr1, char c);
+struct ast_node *make_expr_unop(struct ast_node *expr, char c);
+
+struct ast_node *make_cmd_block(struct ast_node *cmds);
+struct ast_node *make_cmd_repeat(struct ast_node *expr, struct ast_node *cmd);
 // root of the abstract syntax tree
 struct ast {
 	struct ast_node *unit;
+};
+
+// linked list to handle variables and procedures
+struct ast_set {
+	struct ast_node_set *unit;
+};
+
+struct ast_node_set {
+	char *name;
+	struct ast_node *node;
+	struct ast_node_set *next;
 };
 
 // do not forget to destroy properly! no leaks allowed!
@@ -88,14 +123,19 @@ struct context {
 	double y;
 	double angle;
 	bool up;
-
-	// TODO: add procedure handling
-	// TODO: add variable handling
+	struct ast_set *variables;
+	struct ast_set *procedures;
 };
+
+// add, read and free the linked list (ast_set)
+struct ast_node *get_from_context(char *name, struct ast_set *self);
+void set_to_context(char *name, struct ast_node *node, struct ast_set *self);
+void free_ast_set(struct ast_set *self);
 
 // create an initial context
 void context_create(struct context *self);
 
+void ast_print_recu(const struct ast_node *self);
 // print the tree as if it was a Turtle program
 void ast_print(const struct ast *self);
 

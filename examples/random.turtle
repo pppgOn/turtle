@@ -1,5 +1,5 @@
-repeat 100 {
+repeat 1200 {
   right random(0, 360)
   color random(0, 1), random(0, 1), random(0, 1)
-  forward 50
+  forward 10
 }

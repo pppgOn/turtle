@@ -1,9 +1,30 @@
+
+proc SETISWELLDEFINED {
+  home
+  position -100, 100
+  color red
+  fw PI
+  set PI 100
+  color blue
+  fw PI
+}
+
+
+
+proc FORWARDRIGHT{
+  fw DISTANCE
+  right ANGLE
+
+}
+
+set DISTANCE -10 ^ 2
+set PI 60
+set ANGLE PI * 2
+
 color red
-fw 100
-right 120
-color green
-fw 100
-right 120
+call FORWARDRIGHT
+color 0, 1, 0
+call FORWARDRIGHT
 color blue
-fw 100
-right 120
+call FORWARDRIGHT
+call SETISWELLDEFINED
