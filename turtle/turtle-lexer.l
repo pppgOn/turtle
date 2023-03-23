@@ -22,7 +22,7 @@ VAR             [A-Z]+[A-Z0-9]*
 "#".*          /*do nothing*/
 
 
-"color red"        { return COL_RED;}
+"color red"         { return COL_RED;}
 "color green"       { return COL_GREEN;}
 "color blue"        { return COL_BLUE;}
 "color cyan"        { return COL_CYAN;}
@@ -64,7 +64,7 @@ VAR             [A-Z]+[A-Z0-9]*
 {RIGHT}               { return KW_RIGHT; }
 {HEADING}             { return KW_HEADING; }
 {LEFT}                { return KW_LEFT; }
-{DIGIT}+(.{DIGIT}+)?  { yylval.value = strtod(yytext, NULL); return VALUE; }
+{DIGIT}(.{DIGIT}*)?  { yylval.value = strtod(yytext, NULL); return VALUE; }
 [\n\t ]*              /* whitespace */
 .                     { fprintf(stderr, "Unknown token: '%s'\n", yytext); exit(EXIT_FAILURE); }
 

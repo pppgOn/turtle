@@ -62,7 +62,7 @@ struct ast_node *make_cmd_position(struct ast_node *exprX, struct ast_node *expr
   struct ast_node *node = calloc(1, sizeof(struct ast_node));
   node->kind = KIND_CMD_SIMPLE;
   node->u.cmd = CMD_POSITION;
-  node->children_count = 1;
+  node->children_count = 2;
   node->children[0] = exprX;
 	node->children[1] = exprY;
   return node;
@@ -221,6 +221,7 @@ struct ast_node *make_cmd_set(char *name, struct ast_node *expr){
 	//we set the name directly inside the cmd set
 	node->u.name = calloc(strlen(name)+1, sizeof(char));
 	strcpy(node->u.name, name);
+	free(name);
 	node->children_count = 1;
   node->children[0] = expr;
 	return node;
@@ -231,6 +232,7 @@ struct ast_node *make_expr_name(char *name){
 	node->kind = KIND_EXPR_NAME;
 	node->u.name = calloc(strlen(name)+1, sizeof(char));
 	strcpy(node->u.name, name);
+	free(name);
 	node->children_count = 0;
 	return node;
 }
@@ -241,6 +243,7 @@ struct ast_node *make_cmd_proc(char *name, struct ast_node *cmd){
 	//we set the name directly inside the cmd set
 	node->u.name = calloc(strlen(name)+1, sizeof(char));
 	strcpy(node->u.name, name);
+	free(name);
 	node->children_count = 1;
   node->children[0] = cmd;
 	return node;
@@ -251,22 +254,48 @@ struct ast_node *make_cmd_call(char *name){
 	node->kind = KIND_CMD_CALL;
 	node->u.name = calloc(strlen(name)+1, sizeof(char));
 	strcpy(node->u.name, name);
+	free(name);
 	node->children_count = 0;
 	return node;
 }
 
-void ast_destroy(struct ast *self) {
 
+void ast_destroy_recu(struct ast_node *self) {
+	for (size_t i = 0; i < self->children_count; i++) {
+		ast_destroy_recu(self->children[i]);
+		if (self->children[i]->kind == KIND_EXPR_VALUE) {
+		}
+		free(self->children[i]);
+		self->children[i] = NULL;
+	}
+	if (self->kind == KIND_CMD_CALL || self->kind == KIND_CMD_PROC || self->kind == KIND_EXPR_NAME || self->kind == KIND_CMD_SET) {
+		free(self->u.name);
+		self->u.name = NULL;
+	}
+	if (self->next != NULL) {
+		ast_destroy_recu(self->next);
+		if (self->next->kind == KIND_EXPR_VALUE) {
+		}
+		free(self->next);
+		self->next = NULL;
+	}
+}
+
+
+void ast_destroy(struct ast *self) {
+	if (self->unit != NULL) {
+		ast_destroy_recu(self->unit);
+	}
 }
 
 /*
-	get the associate node of a variable or a procedure in the given set
+	get the associate node of a procedure in the given set
 */
-struct ast_node *get_from_context(char *name, struct ast_set *self){
+struct ast_node *get_procedure_from_context(char *name, struct ast_procedure *self){
 	if (self->unit == NULL) {
 		return NULL;
 	}
-	struct ast_node_set *actual = self->unit;
+	struct ast_node_procedure *actual = self->unit;
 	while (actual != NULL) {
 		if (strcmp(name, actual->name) == 0) {
 			return actual->node;
@@ -277,11 +306,65 @@ struct ast_node *get_from_context(char *name, struct ast_set *self){
 }
 
 /*
-	add a variable or a procedure to the given set
+	get the associate value of a variable in the given set
 */
-void set_to_context(char *name, struct ast_node *node, struct ast_set *self) {
+double get_variable_from_context(char *name, struct ast_variable *self){
 	if (self->unit == NULL) {
-		struct ast_node_set *set = calloc(1, sizeof(struct ast_node_set));
+		return 0;
+	}
+	struct ast_node_variable *actual = self->unit;
+	while (actual != NULL) {
+		if (strcmp(name, actual->name) == 0) {
+			return actual->value;
+		}
+		actual = actual->next;
+	}
+	return 0;
+}
+
+
+/*
+	add a variable to the given set
+*/
+void set_variable_to_context(char *name, double value, struct ast_variable *self) {
+	if (self->unit == NULL) {
+		struct ast_node_variable *set = calloc(1, sizeof(struct ast_node_variable));
+		set->name = calloc(strlen(name)+1, sizeof(char));
+		strcpy(set->name, name);
+		set->value = value;
+		set->next = NULL;
+		self->unit = set;
+		return;
+	}
+	struct ast_node_variable *prec = self->unit;
+	struct ast_node_variable *actual = prec->next;
+	while (actual != NULL) {
+		if (strcmp(name, actual->name) == 0) {
+			fprintf(stderr, "%s is already defined\n", actual->name);
+			exit(5);
+		}
+		prec = actual;
+		actual = prec->next;
+	}
+	if (strcmp(name, prec->name) == 0) {
+		fprintf(stderr, "%s is already defined\n", actual->name);
+		exit(5);
+		return;
+	}
+	struct ast_node_variable *set = calloc(1, sizeof(struct ast_node_variable));
+	set->name = calloc(strlen(name)+1, sizeof(char));
+	strcpy(set->name, name);
+	set->value = value;
+	set->next = NULL;
+	prec->next = set;
+}
+
+/*
+	add a procedure to the given set
+*/
+void set_procedure_to_context(char *name, struct ast_node *node, struct ast_procedure *self) {
+	if (self->unit == NULL) {
+		struct ast_node_procedure *set = calloc(1, sizeof(struct ast_node_procedure));
 		set->name = calloc(strlen(name)+1, sizeof(char));
 		strcpy(set->name, name);
 		set->node = node;
@@ -289,8 +372,8 @@ void set_to_context(char *name, struct ast_node *node, struct ast_set *self) {
 		self->unit = set;
 		return;
 	}
-	struct ast_node_set *prec = self->unit;
-	struct ast_node_set *actual = prec->next;
+	struct ast_node_procedure *prec = self->unit;
+	struct ast_node_procedure *actual = prec->next;
 	while (actual != NULL) {
 		if (strcmp(name, actual->name) == 0) {
 			free(actual->node);
@@ -301,21 +384,21 @@ void set_to_context(char *name, struct ast_node *node, struct ast_set *self) {
 		actual = prec->next;
 	}
 	if (strcmp(name, prec->name) == 0) {
+		free(prec->node);
 		prec->node = node;
 		return;
 	}
-	struct ast_node_set *set = calloc(1, sizeof(struct ast_node_set));
+	struct ast_node_procedure *set = calloc(1, sizeof(struct ast_node_procedure));
 	set->name = calloc(strlen(name)+1, sizeof(char));
 	strcpy(set->name, name);
 	set->node = node;
 	set->next = NULL;
 	prec->next = set;
-
 }
 
-void free_ast_node_set(struct ast_node_set *self){
+void free_ast_node_procedure(struct ast_node_procedure *self){
 	if (self != NULL) {
-		free_ast_node_set(self->next);
+		free_ast_node_procedure(self->next);
 		free(self->name);
 		self->name = NULL;
 		if (self->next != NULL) {
@@ -325,10 +408,37 @@ void free_ast_node_set(struct ast_node_set *self){
 	}
 }
 
-void free_ast_set(struct ast_set *self){
-	free_ast_node_set(self->unit);
+void free_ast_node_variable(struct ast_node_variable *self){
+	if (self != NULL) {
+		free_ast_node_variable(self->next);
+		free(self->name);
+		self->name = NULL;
+		if (self->next != NULL) {
+			free(self->next);
+			self->next = NULL;
+		}
+	}
+}
+
+void free_ast_procedure(struct ast_procedure *self){
+	free_ast_node_procedure(self->unit);
 	free(self->unit);
 	self->unit = NULL;
+}
+
+void free_ast_variable(struct ast_variable *self){
+	free_ast_node_variable(self->unit);
+	free(self->unit);
+	self->unit = NULL;
+}
+
+void free_ast_sets(struct context *self){
+	free_ast_variable(self->variables);
+	free_ast_procedure(self->procedures);
+	free(self->variables);
+	free(self->procedures);
+	self->procedures = NULL;
+	self->variables = NULL;
 }
 
 /*
@@ -340,28 +450,6 @@ void context_reset(struct context *self){
 	self->y = 0;
 	self->angle = 90;
 	self->up = false;
-	free_ast_set(self->variables);
-	struct ast_node_set *pi = calloc(1, sizeof(struct ast_node_set));
-	pi->name = calloc(3, sizeof(char));
-	strcpy(pi->name, "PI");
-	pi->node = make_expr_value(3.14159265358979323846);
-	pi->next = NULL;
-
-	struct ast_node_set *sqrt2 = calloc(1, sizeof(struct ast_node_set));
-	sqrt2->name = calloc(6, sizeof(char));
-	strcpy(sqrt2->name, "SQRT2");
-	sqrt2->node = make_expr_value(1.41421356237309504880);
-	sqrt2->next = pi;
-
-	struct ast_node_set *sqrt3 = calloc(1, sizeof(struct ast_node_set));
-	sqrt3->name = calloc(6, sizeof(char));
-	strcpy(sqrt3->name, "SQRT3");
-	sqrt3->node = make_expr_value(1.7320508075688772935);
-	sqrt3->next = sqrt2;
-
-	self->variables->unit = sqrt3;
-	free_ast_set(self->procedures);
-	self->procedures->unit = NULL;
  }
 
 void context_create(struct context *self) {
@@ -369,31 +457,29 @@ void context_create(struct context *self) {
 	self->y = 0;
 	self->angle = 90;
 	self->up = false;
-	self->variables = calloc(1, sizeof(struct ast_set));
-	self->procedures = calloc(1, sizeof(struct ast_set));
+	self->variables = calloc(1, sizeof(struct ast_variable));
+	self->procedures = calloc(1, sizeof(struct ast_procedure));
 
-	struct ast_node_set *pi = calloc(1, sizeof(struct ast_node_set));
+	struct ast_node_variable *pi = calloc(1, sizeof(struct ast_node_variable));
 	pi->name = calloc(3, sizeof(char));
 	strcpy(pi->name, "PI");
-	pi->node = make_expr_value(3.14159265358979323846);
+	pi->value = 3.14159265358979323846;
 	pi->next = NULL;
 
-	struct ast_node_set *sqrt2 = calloc(1, sizeof(struct ast_node_set));
+	struct ast_node_variable *sqrt2 = calloc(1, sizeof(struct ast_node_variable));
 	sqrt2->name = calloc(6, sizeof(char));
 	strcpy(sqrt2->name, "SQRT2");
-	sqrt2->node = make_expr_value(1.41421356237309504880);
+	sqrt2->value = 1.41421356237309504880;
 	sqrt2->next = pi;
 
-	struct ast_node_set *sqrt3 = calloc(1, sizeof(struct ast_node_set));
+	struct ast_node_variable *sqrt3 = calloc(1, sizeof(struct ast_node_variable));
 	sqrt3->name = calloc(6, sizeof(char));
 	strcpy(sqrt3->name, "SQRT3");
-	sqrt3->node = make_expr_value(1.7320508075688772935);
+	sqrt3->value = 1.7320508075688772935;
 	sqrt3->next = sqrt2;
 
 	self->variables->unit = sqrt3;
 	self->procedures->unit = NULL;
-
-
 }
 
 double transform_radian(double angle){
@@ -442,12 +528,7 @@ double ast_eval_expr(const struct ast_node *self, struct context *ctx){
 			}
 			break;
 		case KIND_EXPR_NAME:
-			struct ast_node *expr = get_from_context(self->u.name, ctx->variables);
-			if (expr == NULL) {
-				fprintf(stderr, "var %s isn't set !\n", self->u.name);
-				exit(4);
-			}
-			return ast_eval_expr(expr, ctx);
+			return get_variable_from_context(self->u.name, ctx->variables);
 			break;
 		default:
 			break;
@@ -518,13 +599,13 @@ void ast_eval_recu(const struct ast_node *self, struct context *ctx) {
 			ast_eval_recu(self->children[0], ctx);
 			break;
 		case KIND_CMD_SET:
-			set_to_context(self->u.name, self->children[0], ctx->variables);
+			set_variable_to_context(self->u.name, ast_eval_expr(self->children[0], ctx), ctx->variables);
 			break;
 		case KIND_CMD_PROC:
-			set_to_context(self->u.name, self->children[0], ctx->procedures);
+			set_procedure_to_context(self->u.name, self->children[0], ctx->procedures);
 			break;
 		case KIND_CMD_CALL:
-			struct ast_node *cmd = get_from_context(self->u.name, ctx->procedures);
+			struct ast_node *cmd = get_procedure_from_context(self->u.name, ctx->procedures);
 			if (cmd == NULL) {
 				fprintf(stderr, "proc %s isn't set !\n", self->u.name);
 				exit(4);

@@ -4,7 +4,6 @@ proc SETISWELLDEFINED {
   position -100, 100
   color red
   fw PI
-  set PI 100
   color blue
   fw PI
 }
@@ -18,8 +17,7 @@ proc FORWARDRIGHT{
 }
 
 set DISTANCE -10 ^ 2
-set PI 60
-set ANGLE PI * 2
+set ANGLE 60 * 2
 
 color red
 call FORWARDRIGHT

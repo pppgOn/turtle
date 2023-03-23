@@ -96,7 +96,7 @@ struct ast_node *make_fcn_random(struct ast_node *expr0, struct ast_node *expr1)
 struct ast_node *make_expr_binop(struct ast_node *expr0, struct ast_node *expr1, char c);
 struct ast_node *make_expr_unop(struct ast_node *expr, char c);
 
-struct ast_node *make_cmd_block(struct ast_node *cmds);
+struct ast_node *make_cmd_block(struct ast_node *cmd);
 struct ast_node *make_cmd_repeat(struct ast_node *expr, struct ast_node *cmd);
 // root of the abstract syntax tree
 struct ast {
@@ -104,14 +104,24 @@ struct ast {
 };
 
 // linked list to handle variables and procedures
-struct ast_set {
-	struct ast_node_set *unit;
+struct ast_procedure {
+	struct ast_node_procedure *unit;
 };
 
-struct ast_node_set {
+struct ast_node_procedure {
 	char *name;
 	struct ast_node *node;
-	struct ast_node_set *next;
+	struct ast_node_procedure *next;
+};
+
+struct ast_variable {
+	struct ast_node_variable *unit;
+};
+
+struct ast_node_variable {
+	char *name;
+	double value;
+	struct ast_node_variable *next;
 };
 
 // do not forget to destroy properly! no leaks allowed!
@@ -123,14 +133,19 @@ struct context {
 	double y;
 	double angle;
 	bool up;
-	struct ast_set *variables;
-	struct ast_set *procedures;
+	bool isInProcedure;
+	struct ast_variable *variables;
+	struct ast_procedure *procedures;
 };
 
 // add, read and free the linked list (ast_set)
-struct ast_node *get_from_context(char *name, struct ast_set *self);
-void set_to_context(char *name, struct ast_node *node, struct ast_set *self);
-void free_ast_set(struct ast_set *self);
+struct ast_node *get_procedure_from_context(char *name, struct ast_procedure *self);
+void set_procedure_to_context(char *name, struct ast_node *node, struct ast_procedure *self);
+double get_variable_from_context(char *name, struct ast_variable *self);
+void set_variable_to_context(char *name, double value, struct ast_variable *self);
+void free_ast_variable(struct ast_variable *self);
+void free_ast_procedure(struct ast_procedure *self);
+void free_ast_sets(struct context *self);
 
 // create an initial context
 void context_create(struct context *self);
